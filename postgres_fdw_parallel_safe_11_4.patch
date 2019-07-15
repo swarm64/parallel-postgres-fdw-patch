@@ -1,0 +1,31 @@
+--- a/contrib/postgres_fdw/postgres_fdw.c	2019-07-09 13:55:36.832965796 +0200
++++ b/contrib/postgres_fdw/postgres_fdw.c	2019-07-09 14:00:18.240743475 +0200
+@@ -454,8 +454,9 @@
+ static void merge_fdw_options(PgFdwRelationInfo *fpinfo,
+ 				  const PgFdwRelationInfo *fpinfo_o,
+ 				  const PgFdwRelationInfo *fpinfo_i);
+ 
++static bool postgresIsForeignScanParallelSafe(PlannerInfo *root, RelOptInfo *rel, RangeTblEntry *rte);
+ 
+ /*
+  * Foreign-data wrapper handler function: return a struct with pointers
+  * to my callback routines.
+@@ -508,8 +509,10 @@
+ 
+ 	/* Support functions for upper relation push-down */
+ 	routine->GetForeignUpperPaths = postgresGetForeignUpperPaths;
+ 
++	routine->IsForeignScanParallelSafe = postgresIsForeignScanParallelSafe;
++
+ 	PG_RETURN_POINTER(routine);
+ }
+ 
+ /*
+@@ -5899,4 +5902,7 @@
+ 
+ 	/* We didn't find any suitable equivalence class expression */
+ 	return NULL;
+ }
++static bool postgresIsForeignScanParallelSafe(PlannerInfo *root, RelOptInfo *rel, RangeTblEntry *rte) {
++    return true;
++}
