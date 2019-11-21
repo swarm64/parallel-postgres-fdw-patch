@@ -1,0 +1,12 @@
+505c505,506
+< 
+---
+> 								
+> static bool postgresIsForeignScanParallelSafe(PlannerInfo *root, RelOptInfo *rel, RangeTblEntry *rte);
+559a561,562
+> 	routine->IsForeignScanParallelSafe = postgresIsForeignScanParallelSafe;
+> 
+6500a6504,6506
+> }
+> static bool postgresIsForeignScanParallelSafe(PlannerInfo *root, RelOptInfo *rel, RangeTblEntry *rte) {
+>   return true;
