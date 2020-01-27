@@ -11,5 +11,7 @@ To compile and use the patch follow these instructions:
     - `apt-get source postgresql-11` and `sudo apt-get build-dep postgresql-11`
 1. Apply the patch from this repository to `contrib/postgres_fdw/postgres_fdw.c`
 1. Compile PostgreSQL
-1. Copy `postgres_fdw.so` to `/usr/lib/postgresql/11/lib/`
+1. Copy `postgres_fdw.so` to `$(LIBDIR)`
+1. Copy `postgres_fdw.control` to $(SHAREDIR)/extension/
+1. Copy `postgres_fdw--1.0.sql` to $(SHAREDIR)/extension/
 1. Restart PostgreSQL

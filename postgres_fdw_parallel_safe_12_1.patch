@@ -1,12 +1,88 @@
-505c505,506
-< 
----
-> 								
-> static bool postgresIsForeignScanParallelSafe(PlannerInfo *root, RelOptInfo *rel, RangeTblEntry *rte);
-559a561,562
-> 	routine->IsForeignScanParallelSafe = postgresIsForeignScanParallelSafe;
-> 
-6500a6504,6506
-> }
-> static bool postgresIsForeignScanParallelSafe(PlannerInfo *root, RelOptInfo *rel, RangeTblEntry *rte) {
->   return true;
+diff --git a/contrib/postgres_fdw/postgres_fdw.c
+b/contrib/postgres_fdw/postgres_fdw.c
+index 2175dff..3d6b804 100644
+--- a/contrib/postgres_fdw/postgres_fdw.c
++++ b/contrib/postgres_fdw/postgres_fdw.c
+@@ -3,7 +3,7 @@
+*postgres_fdw.c
+*Foreign-data wrapper for remote PostgreSQL servers
+*
+- *Portions Copyright (c) 2012-2020, PostgreSQL Global Development Group
+	+ *Portions Copyright (c) 2012-2019, PostgreSQL Global Development Group
+	*
+	*IDENTIFICATION
+	*contrib/postgres_fdw/postgres_fdw.c
+	@@ -503,6 +503,7 @@ static void apply_table_options(PgFdwRelationInfo *fpinfo);
+static void merge_fdw_options(PgFdwRelationInfo *fpinfo,
+                              const PgFdwRelationInfo *fpinfo_o,
+                              const PgFdwRelationInfo *fpinfo_i);
++static bool postgresIsForeignScanParallelSafe(PlannerInfo *root,
+                RelOptInfo *rel, RangeTblEntry *rte);
+
+
+/*
+@@ -558,6 +559,8 @@ postgres_fdw_handler(PG_FUNCTION_ARGS)
+	/* Support functions for upper relation push-down */
+routine->GetForeignUpperPaths = postgresGetForeignUpperPaths;
+
++	routine->IsForeignScanParallelSafe = postgresIsForeignScanParallelSafe;
++
+PG_RETURN_POINTER(routine);
+}
+
+@@ -3219,7 +3222,7 @@ get_remote_estimate(const char *sql, PGconn *conn,
+                if (n != 4)
+                elog(ERROR, "could not interpret EXPLAIN output: \"%s\"", line);
+}
+-	PG_FINALLY();
++	PG_CATCH();
+{
+if (res) {
+		PQclear(res);
+	}
+	@@ -3443,7 +3446,7 @@ fetch_more_data(ForeignScanState *node)
+	/* Must be EOF if we didn't get as many tuples as we asked for. */
+	fsstate->eof_reached = (numrows < fsstate->fetch_size);
+}
+-	PG_FINALLY();
++	PG_CATCH();
+{
+	if (res) {
+		PQclear(res);
+	}
+	@@ -4460,7 +4463,7 @@ postgresAnalyzeForeignTable(Relation relation,
+	                elog(ERROR, "unexpected result from deparseAnalyzeSizeSql query");
+	                *totalpages = strtoul(PQgetvalue(res, 0, 0), NULL, 10);
+}
+-	PG_FINALLY();
++	PG_CATCH();
+{
+	if (res) {
+		PQclear(res);
+	}
+	@@ -4977,7 +4980,7 @@ postgresImportForeignSchema(ImportForeignSchemaStmt *stmt,
+	                Oid serverOid)
+	commands = lappend(commands, pstrdup(buf.data));
+}
+}
+-	PG_FINALLY();
++	PG_CATCH();
+{
+	if (res) {
+		PQclear(res);
+	}
+	@@ -6552,6 +6555,10 @@ find_em_expr_for_rel(EquivalenceClass *ec,
+	                RelOptInfo *rel)
+	return NULL;
+}
+
++static bool postgresIsForeignScanParallelSafe(PlannerInfo *root,
+                RelOptInfo *rel, RangeTblEntry *rte)
+{
+	+	return true;
+	+
+}
++
+/*
+ * Find an equivalence class member expression to be computed as a sort column
+ * in the given target.
